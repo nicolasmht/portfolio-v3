@@ -10,10 +10,13 @@ class ScrollingText {
 
         this.radio = this.canvas.width / this.canvas.height;
 
-        this.text = 'Work';
-        this.textArray = this.text.replace(/\s/g,'').toUpperCase().split('');
-        this.charArray = []; // { char: 'N', x: 0, y: 0, width: 0 }
+        this.text = 'Hello World';
+        this.splittedText = this.text.replace(/\s/g,'').toUpperCase().split('');
+
+        this.linesOfCharacters = []; // [{ char: 'N', x: 0, y: 0, width: 0 }]
+        
         this.spaceBetweenChar = 25;
+        this.spaceBetweenLines = 25;
 
         this.speed = { velocity: -2, translateX: 0 };
 
@@ -22,21 +25,23 @@ class ScrollingText {
         this.deltaTime = 0;
 
         this.ctx.font = "8rem Cardo";
-        this.ctx.strokeStyle = "#333";
-        this.ctx.lineWidth = 1;
+        this.ctx.strokeStyle = "#111";
+        this.ctx.lineWidth = 2;
         this.ctx.textAlign = 'left';
         this.ctx.textBaseline = 'center';
-        this.ctx.direction = 'ltr';
+        this.ctx.speed = 'ltr';
 
         this.currentCharInLeft = 0;
         this.currentCharInRight = 0;
         this.numberAutomaticlly = null;
      
         this.createSentenceVisible();
+
+        // console.log(this.getNumberVisibleOfScreen())
     }
 
     charactersDraw = () => {
-        this.charArray.forEach((char, index) => {
+        /*this.linesOfCharacters.forEach((char, index) => {
 
             this.ctx.save();
     
@@ -48,33 +53,82 @@ class ScrollingText {
             this.ctx.strokeText(char.char, 0, this.canvas.height / 2 - 75);
     
             this.ctx.restore();
-        });
+        });*/
+
+        this.linesOfCharacters.forEach((line) => {
+            line.forEach((character, index) => {
+
+                this.ctx.save();
+        
+                this.ctx.translate(character.x, character.y);
+    
+                this.ctx.transform(1, 0, character.speed * 0.01, 1, 0, 0);
+                // this.ctx.clip();
+        
+                this.ctx.strokeText(character.char, 0, 0);
+        
+                this.ctx.restore();
+            });
+        })
     }
 
-    createSentenceVisible = () => {
+    getNumberVisibleOfScreen = () => {
         let widthOfSentence = 0,
             currentCharacter = 0,
             totalCharacters = 0;
-    
+
         while (widthOfSentence < this.canvas.width) {
-            
-            let characterWidth = this.ctx.measureText(this.textArray[currentCharacter]).width;
-    
-            this.charArray.push({
-                char: this.textArray[currentCharacter],
-                x: parseInt(widthOfSentence),
-                w: characterWidth
-            });
-    
+            let characterWidth = this.ctx.measureText(this.splittedText[currentCharacter]).width;
+
             widthOfSentence += characterWidth + this.spaceBetweenChar;
     
             currentCharacter++;
-            totalCharacters++;            
+            totalCharacters++;
     
-            if (currentCharacter == this.textArray.length) { currentCharacter = 0; }
+            if (currentCharacter == this.splittedText.length) { currentCharacter = 0; }
         }
+
+        let getTextHeight = parseInt(this.ctx.font.match(/\d+/), 10),
+            heightOfLines = 0,
+            totalLinesHeight = 0;
+
+        while (heightOfLines < this.canvas.height) {
+            heightOfLines += getTextHeight;
+            totalLinesHeight++;
+        }
+        
+        return {totalLinesHeight, totalCharacters};
+    }
+
+    createSentenceVisible = () => {
+
+        const numberVisible = this.getNumberVisibleOfScreen();
+
+        for (let line = 0; line < numberVisible.totalLinesHeight; line++) {
+            
+            let lineArray = [];
+            
+            for (let i = 0, widthOfSentence = 0, currentCharacter = 0; i < numberVisible.totalCharacters; i++) {
+
+                let characterWidth = this.ctx.measureText(this.splittedText[currentCharacter]).width;
+                
+                lineArray.push({
+                    char: this.splittedText[currentCharacter],
+                    x: parseInt(widthOfSentence),
+                    y: (parseInt(this.ctx.font.match(/\d+/), 10) * line) + parseInt(this.ctx.font.match(/\d+/), 10),
+                    w: characterWidth,
+                    speed: ((line%2 == 0) ? -this.speed.velocity : this.speed.velocity)
+                });
+
+                widthOfSentence += characterWidth + this.spaceBetweenChar;
     
-        this.firstSentence = { totalCharacters: totalCharacters, widthOfSentence: widthOfSentence}
+                currentCharacter++;
+        
+                if (currentCharacter == this.splittedText.length) { currentCharacter = 0; }
+            }
+
+            this.linesOfCharacters.push(lineArray);
+        }
     }
 
     createSentenceInLeft = () => {
@@ -83,9 +137,9 @@ class ScrollingText {
             
             let characterWidth = this.ctx.measureText(this.textArray[this.textArray.length - 1 - i]).width;
     
-            this.charArray.unshift({
+            this.linesOfCharacters.unshift({
                 char: this.textArray[this.textArray.length - 1 - i],
-                x: this.charArray[0].x - this.spaceBetweenChar - characterWidth,
+                x: this.linesOfCharacters[0].x - this.spaceBetweenChar - characterWidth,
                 w: characterWidth
             });
         }
@@ -93,23 +147,27 @@ class ScrollingText {
     }
     
     createSentenceInRight = () => {
-    
-        for(let i = 0; i < this.textArray.length; i++) {
+
+        this.linesOfCharacters.forEach(line => {
+
+            for(let i = 0; i < this.splittedText.length; i++) {
             
-            let characterWidth = this.ctx.measureText(this.textArray[i]).width;
-    
-            this.charArray.push({
-                char: this.textArray[i],
-                x: this.charArray[this.charArray.length - 1].x + this.charArray[this.charArray.length - 1].w + this.spaceBetweenChar,
-                w: characterWidth
-            });
-        }
+                let characterWidth = this.ctx.measureText(this.splittedText[i]).width;
+        
+                line .push({
+                    char: this.splittedText[i],
+                    x: this.linesOfCharacters[this.linesOfCharacters.length - 1].x + this.linesOfCharacters[this.linesOfCharacters.length - 1].w + this.spaceBetweenChar,
+                    w: characterWidth
+                });
+            }
+        })
+
     }
 
     getCurrentCharInLeft = () => {
 
         if (Math.sign(this.speed.velocity) == -1) {
-            if (this.charArray[this.currentCharInLeft].x + this.charArray[this.currentCharInLeft].w < 0) {
+            if (this.linesOfCharacters[this.currentCharInLeft].x + this.linesOfCharacters[this.currentCharInLeft].w < 0) {
                 this.currentCharInLeft++;
             }
         }
@@ -118,7 +176,7 @@ class ScrollingText {
     getCurrentCharInRight = () => {
 
         if (Math.sign(this.speed.velocity) == 1) {
-            if (this.charArray[this.charArray.length - 1 - this.currentCharInRight].x > this.canvas.width) {
+            if (this.linesOfCharacters[this.linesOfCharacters.length - 1 - this.currentCharInRight].x > this.canvas.width) {
                 this.currentCharInRight++;
             }
         }
@@ -127,24 +185,45 @@ class ScrollingText {
     removeSentenceFirst = () => {
 
         for (let i = 0; i < this.firstSentence.totalCharacters; i++) {
-            this.charArray.shift();
+            this.linesOfCharacters.shift();
         }
 
     }
 
     addAutomaticllyText = () => {
 
-        if (Math.sign(this.speed.velocity) == 1 && this.charArray[0].x > 0) {
-            this.createSentenceInLeft();
-        }
+        this.linesOfCharacters.forEach(line => {
+            line.forEach(character => {
+                if (Math.sign(this.speed.velocity) == 1 && character[0].x > 0) {
+                    this.createSentenceInLeft();
+                }
 
-        if (Math.sign(this.speed.velocity) == -1 && this.charArray[this.charArray.length - 1].x < this.canvas.width) {
+                // if (Math.sign(this.speed.velocity) == -1 && character[line.length - 1].x < this.canvas.width) {
 
-            // if (this.charArray.length > this.firstSentence.totalCharacters) {
+                //     // if (this.linesOfCharacters.length > this.firstSentence.totalCharacters) {
+                //     //     this.removeSentenceFirst();
+                //     // }
+        
+                //     this.createSentenceInRight();
+        
+                    
+                // }
+
+            })
+            
+        })
+
+        
+
+        if (Math.sign(this.speed.velocity) == -1 && this.linesOfCharacters[this.linesOfCharacters.length - 1].x < this.canvas.width) {
+
+            // if (this.linesOfCharacters.length > this.firstSentence.totalCharacters) {
             //     this.removeSentenceFirst();
             // }
 
             this.createSentenceInRight();
+
+            
         }
     }
 
@@ -161,13 +240,21 @@ class ScrollingText {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
         this.speed.translateX += this.speed.velocity;
+
+
     
-        this.charArray.forEach((char, index) => { char.x = char.x + this.speed.velocity; });
+        // this.linesOfCharacters.forEach((char, index) => { char.x = char.x + this.speed.velocity; });
+
+        this.linesOfCharacters.forEach(line => {
+            line.forEach(character => {
+                character.x = character.x + character.speed;
+            })
+        })
         
         this.charactersDraw();
 
-        this.getCurrentCharInLeft();
-        this.getCurrentCharInRight();
+        // this.getCurrentCharInLeft();
+        // this.getCurrentCharInRight();
 
         // console.log(this.currentCharInLeft)
 
@@ -184,7 +271,7 @@ let ratio = canvas.width / canvas.height;
 
 let text = 'Hello World',
     textArray = text.replace(/\s/g,'').toUpperCase().split('');
-    charArray = [], // { char: 'N', x: 0, y: 0, width: 0 }
+    linesOfCharacters = [], // { char: 'N', x: 0, y: 0, width: 0 }
     spaceBetweenChar = 25;
 
 let speed = {velocity: -1, translateX: 0},
@@ -195,7 +282,7 @@ ctx.strokeStyle = "#fff";
 ctx.lineWidth = 1.4;
 ctx.textAlign = 'left';
 ctx.textBaseline = 'center';
-ctx.direction = 'ltr';
+ctx.speed = 'ltr';
 
 let firstSentence = {};
 
@@ -208,7 +295,7 @@ export const createSentenceVisible = () => {
     while (widthOfSentence < window.innerWidth) {
         let characterWidth = ctx.measureText(textArray[currentCharacter]).width;
 
-        charArray.push({
+        linesOfCharacters.push({
             char: textArray[currentCharacter],
             x: widthOfSentence,
             w: characterWidth
@@ -233,9 +320,9 @@ const createSentenceInLeft = () => {
         
         let characterWidth = ctx.measureText(textArray[textArray.length - 1 - i]).width;
 
-        charArray.unshift({
+        linesOfCharacters.unshift({
             char: textArray[textArray.length - 1 - i],
-            x: charArray[0].x - spaceBetweenChar - characterWidth,
+            x: linesOfCharacters[0].x - spaceBetweenChar - characterWidth,
             w: characterWidth
         });
     }
@@ -249,9 +336,9 @@ const createSentenceInRight = () => {
         
         let characterWidth = ctx.measureText(textArray[i]).width;
 
-        charArray.push({
+        linesOfCharacters.push({
             char: textArray[i],
-            x: charArray[charArray.length - 1].x + charArray[charArray.length - 1].w + spaceBetweenChar,
+            x: linesOfCharacters[linesOfCharacters.length - 1].x + linesOfCharacters[linesOfCharacters.length - 1].w + spaceBetweenChar,
             w: characterWidth
         });
     }
@@ -260,25 +347,25 @@ const createSentenceInRight = () => {
 let currentCharInLeft = 0;
 const getCurrentCharInLeft = () => {
 
-    if (charArray[currentCharInLeft] == undefined) { return currentCharInRight = null; }
+    if (linesOfCharacters[currentCharInLeft] == undefined) { return currentCharInRight = null; }
 
-    if (charArray[currentCharInLeft].x + charArray[currentCharInLeft].w < 0) {
+    if (linesOfCharacters[currentCharInLeft].x + linesOfCharacters[currentCharInLeft].w < 0) {
         currentCharInLeft++;
     }
 }
 
-let currentCharInRight = charArray.length - 1;
+let currentCharInRight = linesOfCharacters.length - 1;
 const getCurrentCharInRight = () => {
 
-    if (charArray[currentCharInRight] == undefined) { return currentCharInRight = null; }
+    if (linesOfCharacters[currentCharInRight] == undefined) { return currentCharInRight = null; }
 
-    if (charArray[currentCharInRight].x > window.innerWidth) {
+    if (linesOfCharacters[currentCharInRight].x > window.innerWidth) {
         currentCharInRight--;
     }
 }
 
 const charactersDraw = () => {
-    charArray.forEach((char, index) => {
+    linesOfCharacters.forEach((char, index) => {
 
         ctx.save();
 
@@ -301,7 +388,7 @@ const animation = () => {
 
     speed.translateX += speed.velocity;
 
-    charArray.forEach((char, index) => { char.x = char.x + speed.velocity; });
+    linesOfCharacters.forEach((char, index) => { char.x = char.x + speed.velocity; });
     
     charactersDraw();
 
