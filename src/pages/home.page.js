@@ -14,7 +14,7 @@ function Home() {
 
         scrolling = new ScrollingText(canvasRef.current);
 
-        // document.addEventListener('keyup', (event) => scrolling.start(event));
+        document.addEventListener('wheel', (event) => scrolling.start(event));
         
         requestRef.current = scrolling.animate();
         return () => cancelAnimationFrame(requestRef.current);

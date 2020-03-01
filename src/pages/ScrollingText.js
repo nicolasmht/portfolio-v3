@@ -10,30 +10,29 @@ class ScrollingText {
 
         this.radio = this.canvas.width / this.canvas.height;
 
-        this.text = 'Hello World';
+        this.text = 'Work';
         this.textArray = this.text.replace(/\s/g,'').toUpperCase().split('');
         this.charArray = []; // { char: 'N', x: 0, y: 0, width: 0 }
         this.spaceBetweenChar = 25;
 
-        this.speed = {velocity: 1, translateX: 0};
+        this.speed = { velocity: -2, translateX: 0 };
 
         this.timePassed = 0;
         this.time = Date.now();
         this.deltaTime = 0;
 
         this.ctx.font = "8rem Cardo";
-        this.ctx.strokeStyle = "#fff";
-        this.ctx.lineWidth = 1.4;
+        this.ctx.strokeStyle = "#333";
+        this.ctx.lineWidth = 1;
         this.ctx.textAlign = 'left';
         this.ctx.textBaseline = 'center';
         this.ctx.direction = 'ltr';
 
         this.currentCharInLeft = 0;
         this.currentCharInRight = 0;
+        this.numberAutomaticlly = null;
      
         this.createSentenceVisible();
-        this.createSentenceInLeft();
-        this.createSentenceInRight();
     }
 
     charactersDraw = () => {
@@ -42,7 +41,7 @@ class ScrollingText {
             this.ctx.save();
     
             this.ctx.translate(char.x, 100);
-                    
+
             this.ctx.transform(1, 0, this.speed.velocity * 0.01, 1, 0, 0);
             // this.ctx.clip();
     
@@ -109,48 +108,48 @@ class ScrollingText {
 
     getCurrentCharInLeft = () => {
 
-        // if (this.charArray[this.currentCharInLeft] == undefined) { return this.currentCharInLeft = null; }
-
         if (Math.sign(this.speed.velocity) == -1) {
             if (this.charArray[this.currentCharInLeft].x + this.charArray[this.currentCharInLeft].w < 0) {
                 this.currentCharInLeft++;
             }
         }
-
-        if (Math.sign(this.speed.velocity) == 1) {
-            if (this.charArray[this.currentCharInLeft].x + this.charArray[this.currentCharInLeft].w > 0) {
-                this.currentCharInLeft--;
-            }
-        }
-
-        
-
-        console.log(this.currentCharInLeft);
     }
 
     getCurrentCharInRight = () => {
 
-        if (this.charArray[this.currentCharInRight] == undefined) { return this.currentCharInRight = null; }
-        
-        if (this.charArray[this.currentCharInRight].x > this.canvas.width) {
-            this.currentCharInRight--;
+        if (Math.sign(this.speed.velocity) == 1) {
+            if (this.charArray[this.charArray.length - 1 - this.currentCharInRight].x > this.canvas.width) {
+                this.currentCharInRight++;
+            }
         }
     }
 
+    removeSentenceFirst = () => {
+
+        for (let i = 0; i < this.firstSentence.totalCharacters; i++) {
+            this.charArray.shift();
+        }
+
+    }
+
     addAutomaticllyText = () => {
-        // if (this.previousCharacter == undefined) { this.previousCharacter = 0; }
 
-        // if (this.charArray[this.currentCharInLeft] == this.charArray[this.previousCharacter]) {
-        //     this.previousCharacter++;
-        // }
+        if (Math.sign(this.speed.velocity) == 1 && this.charArray[0].x > 0) {
+            this.createSentenceInLeft();
+        }
 
-        // console.log(this.currentCharInRight);
+        if (Math.sign(this.speed.velocity) == -1 && this.charArray[this.charArray.length - 1].x < this.canvas.width) {
 
-        // if (this.currentCharInRight > this.firstSentence.totalCharacters / 2) {
-        //     console.log(this.currentCharInLeft);
-        // }
+            // if (this.charArray.length > this.firstSentence.totalCharacters) {
+            //     this.removeSentenceFirst();
+            // }
 
-        // console.log(this.currentCharInLeft);
+            this.createSentenceInRight();
+        }
+    }
+
+    start = (event) => {
+        // this.speed.velocity = event.deltaY;
     }
 
     animate = () => {
