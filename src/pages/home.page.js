@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import '../styles/fonts.style.css';
 import '../styles/home.style.css';
 
 import ScrollingText from './ScrollingText';
@@ -14,7 +15,7 @@ function Home() {
 
         scrolling = new ScrollingText(canvasRef.current);
 
-        document.addEventListener('wheel', (event) => scrolling.start(event));
+        document.addEventListener('wheel', (event) => scrolling.changeProject(event));
         
         requestRef.current = scrolling.animate();
         return () => cancelAnimationFrame(requestRef.current);

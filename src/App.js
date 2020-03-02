@@ -8,14 +8,15 @@ import {
 
 import './App.css';
 
-import Home from './pages/home.page';
+// import Home from './pages/home.page';
+import ParticlesProjects from './pages/particlesprojects';
 
 function App() {
 	return (
 		<Router>
 			<Switch>
-				<Route path="/" exact component={Home} />
-				<Route path="/home" component={Home} />
+				<Route path="/" exact component={ParticlesProjects} />
+				<Route path="/home" component={ParticlesProjects} />
 				<Route path="/about" component={About} />
 				<Route path="/users" component={Users} />
 
