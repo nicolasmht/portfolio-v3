@@ -2,12 +2,11 @@ const Shader = {
     vertexShader: `
         uniform float u_time;
         uniform float u_particleSize;
+        uniform sampler2D u_texture;
         uniform float u_scaleImage;
         uniform float u_ratioWidth;
         uniform float u_ratioHeight;
         uniform float u_amplitude;
-
-        uniform sampler2D u_texture;
         
         varying vec3 v_position;
         
@@ -19,7 +18,7 @@ const Shader = {
         
         void main() {
         
-            v_position = vec3(1.0, 1.0, 1.0);
+            v_position = position;
         
             float scale = u_scaleImage;
         
@@ -31,11 +30,11 @@ const Shader = {
             float positionZ = 0.0;
         
             vec4 textureColor = texture2D(u_texture, vec2(position.x, position.y));
+        
             positionZ = calculateWeights(vec3(textureColor.r, textureColor.g, textureColor.b)) * u_amplitude;
         
-            vec4 modelViewPosition = modelViewMatrix * vec4(vec3(positionX, positionY, positionZ * 0.0), 1.0);
+            vec4 modelViewPosition = modelViewMatrix * vec4(vec3(positionX, positionY, positionZ), 1.0);
             gl_Position = projectionMatrix * modelViewPosition;
-            
             gl_PointSize = u_particleSize;
         }
     `,
@@ -54,10 +53,9 @@ const Shader = {
             float grey = 0.299 * textureColorOriginal.r + 0.587 * textureColorOriginal.g + 0.114 * textureColorOriginal.b;
             vec4 textureColorGrey = vec4(grey, grey, grey, 1.0) * u_alpha;
         
-            //vec3 colorFinal = mix(vec3(grey, grey, grey), vec3(textureColorOriginal.r, textureColorOriginal.g, textureColorOriginal.b), u_valueImageColor);
+            vec3 colorFinal = mix(vec3(grey, grey, grey), vec3(textureColorOriginal.r, textureColorOriginal.g, textureColorOriginal.b), u_valueImageColor);
         
-            //gl_FragColor = textureColorGrey;
-            gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+            gl_FragColor = textureColorGrey;
         }
     `
 }

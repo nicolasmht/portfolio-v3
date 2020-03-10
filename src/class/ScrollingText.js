@@ -23,9 +23,9 @@ class ScrollingText {
         this.time = Date.now();
         this.deltaTime = 0;
 
-        this.ctx.font = "8rem Cardo";
-        this.ctx.strokeStyle = "#000";
-        this.ctx.lineWidth = 2;
+        this.ctx.font = "8rem Playfair Display";
+        this.ctx.strokeStyle = "rgb(60, 60, 60)";
+        this.ctx.lineWidth = 1;
         this.ctx.textAlign = 'left';
         this.ctx.textBaseline = 'center';
         this.ctx.direction = 'ltr';
@@ -34,13 +34,15 @@ class ScrollingText {
         this.currentCharInRight = 0;
         this.numberAutomaticlly = null;
 
-        this.globalAlpha = {value: 0.15};
+        this.globalAlpha = {value: 1};
      
         this.letterVisibleSettings = this.createSentenceVisible();
 
         this.triggerChangeProject = {
             waitTime: 1000
         };
+
+        document.addEventListener('mousemove', event => this.handleMouse(event));
     }
 
     charactersDraw = () => {
@@ -193,39 +195,49 @@ class ScrollingText {
     changeProject = (event) => {
 
         // Create trigger
-        if (this.triggerChangeProject.lastTimeStamp == undefined) {
-            this.triggerChangeProject.lastTimeStamp = event.timeStamp - this.triggerChangeProject.waitTime;
-        }
+        // if (this.triggerChangeProject.lastTimeStamp == undefined) {
+        //     this.triggerChangeProject.lastTimeStamp = event.timeStamp - this.triggerChangeProject.waitTime;
+        // }
 
-        if (event.timeStamp < this.triggerChangeProject.lastTimeStamp + this.triggerChangeProject.waitTime) {
-            return;
-        }
+        // if (event.timeStamp < this.triggerChangeProject.lastTimeStamp + this.triggerChangeProject.waitTime) {
+        //     return;
+        // }
 
         this.triggerChangeProject.lastTimeStamp = event.timeStamp;
 
-        if (Math.sign(event.deltaY) == -1) {
-            console.log('Up');
+        // if (Math.sign(event.deltaY) == -1) {
+        //     console.log('Up');
 
-            Anime({
-                targets: this.speed,
-                velocity: [this.speed.velocity, -this.letterVisibleSettings.totalLetterWidth * 4, (Math.sign(this.speed.velocity) == 1) ? -this.speed.velocity : this.speed.velocity],
-                duration: 800,
-                easing: 'easeOutCirc',
-            });
-        }
+        //     Anime({
+        //         targets: this.speed,
+        //         velocity: [this.speed.velocity, -this.letterVisibleSettings.totalLetterWidth * 4, (Math.sign(this.speed.velocity) == 1) ? -this.speed.velocity : this.speed.velocity],
+        //         duration: 800,
+        //         easing: 'easeOutCirc',
+        //     });
+        // }
 
-        if (Math.sign(event.deltaY) == 1) {
+        // if (Math.sign(event.deltaY) == 1) {
 
-            this.text = 'Nicolas';
+        //     this.text = 'Nicolas';
+        //     this.letters = this.text.replace(/\s/g,'').toUpperCase().split('');
+
+        //     Anime({
+        //         targets: this.speed,
+        //         velocity: [this.speed.velocity, this.letterVisibleSettings.totalLetterWidth * 4, (Math.sign(this.speed.velocity) == 1) ? this.speed.velocity : -this.speed.velocity],
+        //         duration: 12000,
+        //         easing: 'easeOutCirc',
+        //     });
+        // }
+
+        this.text = 'Nicolas';
             this.letters = this.text.replace(/\s/g,'').toUpperCase().split('');
 
             Anime({
                 targets: this.speed,
                 velocity: [this.speed.velocity, this.letterVisibleSettings.totalLetterWidth * 4, (Math.sign(this.speed.velocity) == 1) ? this.speed.velocity : -this.speed.velocity],
-                duration: 800,
-                easing: 'easeOutCirc',
+                duration: 1200,
+                easing: 'easeOutQuart',
             });
-        }
 
         Anime({
             targets: this.globalAlpha,
@@ -266,6 +278,18 @@ class ScrollingText {
         
         
         return requestAnimationFrame(this.animate);
+    }
+
+    handleMouse(event) {
+        let x = ( event.clientX / window.innerWidth ) * 2 - 1;
+        let y = ( event.clientY / window.innerHeight ) * 2 - 1;
+        
+        if (x < 0) {
+            this.speed.velocity = -1 + x * 3;
+        } else {
+            this.speed.velocity = 1 + x * 3;
+        }
+        
     }
 
 }

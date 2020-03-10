@@ -2,26 +2,18 @@ import React, { useEffect, useRef } from 'react';
 import '../styles/fonts.style.css';
 import '../styles/home.style.css';
 
-import ScrollingText from './ScrollingText';
+// Components
+import ScrollingText from '../components/scrollingText.component';
+import Showcase from '../components/showcase.component';
 
 function Home() {
 
-    const canvasRef = useRef();
-    const requestRef = useRef();
-    
-    let scrolling = 0;
-
-    useEffect(() => {
-
-        scrolling = new ScrollingText(canvasRef.current);
-
-        document.addEventListener('wheel', (event) => scrolling.changeProject(event));
-        
-        requestRef.current = scrolling.animate();
-        return () => cancelAnimationFrame(requestRef.current);
-    }, []);
-  
-    return( <canvas id="canvas" ref={canvasRef}></canvas> )
+    return (
+        <div id="home">
+            <Showcase />
+            {/* <ScrollingText /> */}
+        </div>
+    )
   
 }
 

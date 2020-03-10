@@ -9,14 +9,14 @@ import {
 import './App.css';
 
 // import Home from './pages/home.page';
-import ParticlesProjects from './pages/particlesprojects';
+import Home from './pages/home.page';
 
 function App() {
 	return (
 		<Router>
 			<Switch>
-				<Route path="/" exact component={ParticlesProjects} />
-				<Route path="/home" component={ParticlesProjects} />
+				<Route path="/" exact component={Home} />
+				<Route path="/home" component={Home} />
 				<Route path="/about" component={About} />
 				<Route path="/users" component={Users} />
 
