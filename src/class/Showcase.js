@@ -1,5 +1,7 @@
 import * as THREE from "three";
 import anime from "animejs";
+
+import TouchTexture from './TouchTexture';
 import ImageToParticles from '../class/ImageToParticles';
 
 import ProjetsJson from '../projects';
@@ -23,9 +25,12 @@ class Showcase{
         this.particlesGroup = new THREE.Group();
         this.state = { currentProject: 0, enabledParallax: true, openProject: false };
 
-        this.distanceBetweenProject = 300;
+        this.distanceBetweenProject = 350;
 
-        this.mouse = {x: 0, y: 0};
+        this.raycaster = new THREE.Raycaster();
+        this.mouse = new THREE.Vector2();
+
+        this.tt = new TouchTexture();
 
         this.buildScene();
         this.initProjectsParticles();
@@ -48,7 +53,7 @@ class Showcase{
 
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 
-        this.camera.position.z = 300;
+        this.camera.position.z = this.distanceBetweenProject;
 
         this.renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
         this.renderer.setPixelRatio(window.devicePixelRatio || 1);
@@ -61,11 +66,29 @@ class Showcase{
 
     initProjectsParticles() {
 
+        // Create plane for interaction
+        var geometryPlane = new THREE.PlaneBufferGeometry(this.imageToParticlesClass.ratioWidthImg * 600, this.imageToParticlesClass.ratioHeightImg * 600, 125, 125);
+        var materialShaderPlane = new THREE.ShaderMaterial({
+            uniforms: {
+                uMap: { type: 't', value: this.tt.texture }
+            },
+            vertexShader: this.tt.vertexShader(),
+            fragmentShader: this.tt.fragmentShader(),
+            transparent: true,
+            opacity: 0
+        });
+
+        this.planeTouch = new THREE.Mesh(geometryPlane, materialShaderPlane);
+        this.planeTouch.name = 'Plane';
+
+        this.scene.add(this.planeTouch);
+
         ProjetsJson.forEach((currentProject, index) => {
 		
             // Create particle system
             let particle = new THREE.Points(this.geometryPoints, this.materialPoints.clone());
             particle.material.uniforms.u_texture.value = new THREE.TextureLoader().load(currentProject.img);
+            particle.material.uniforms.u_touch.value = this.tt.texture;
     
             // Set position
             // particle.position.z = index * this.distanceBetweenProject * -1;
@@ -136,6 +159,18 @@ class Showcase{
             {
                 targets: this.camera.position,
                 z: this.camera.position.z - this.distanceBetweenProject,
+                easing: "easeOutSine",
+                duration: 1000,
+                complete: () => {
+                    currentProjectGroup.visible = false;
+                }
+            },
+            570
+        )
+        .add(
+            {
+                targets: this.planeTouch.position,
+                z: this.planeTouch.position.z - this.distanceBetweenProject,
                 easing: "easeOutSine",
                 duration: 1000,
                 complete: () => {
@@ -219,8 +254,16 @@ class Showcase{
     handleMouseMove(event) {
         this.mouse = this.getNDCCoordinates(event);
 
+        this.raycaster.setFromCamera(this.mouse, this.camera);
+        this.intersects = this.raycaster.intersectObjects(this.scene.children);
+
+        for ( var i = 0; i < this.intersects.length; i++ ) {
+            if (this.intersects[i].object.name == 'Plane') {
+                this.tt.addTouch(this.intersects[i].uv);
+            }
+        }
+
         this.parallax();
-        // console.log(this.parallaxID)
     }
 
     parallax() {
@@ -240,47 +283,30 @@ class Showcase{
         // });
 
         // currentProjectPoint.rotation.y = ((this.mouse.x));
-        // currentProjectPoint.rotation.x = ((-this.mouse.y));        
-        
-
-        let amplitude = 0.0;
+        // currentProjectPoint.rotation.x = ((-this.mouse.y));
 
         // Left Bottom
-        if (this.mouse.x < 0 && this.mouse.y < 0) {
-            amplitude = (-this.mouse.x/2) + (-this.mouse.y/2)
-        }
 
-        // Left Top
-        if (this.mouse.x < 0 && this.mouse.y > 0) {
-            amplitude = (-this.mouse.x/2) + (this.mouse.y/2);
-        }
-
-        // Right Bottom
-        if (this.mouse.x > 0 && this.mouse.y < 0) {
-            amplitude = (this.mouse.x/2) - (this.mouse.y/2);
-        }
-
-        // Right Top
-        if (this.mouse.x > 0 && this.mouse.y > 0) {
-            amplitude = (this.mouse.x/2) - (-this.mouse.y/2);
-        }
+        let amplitude = Math.sqrt((this.mouse.x*this.mouse.x) + (this.mouse.y*this.mouse.y));
 
         // Change amplitude of Z with mouse position
-        anime({
-            targets: currentProjectPoint.material.uniforms.u_amplitude,
-            value: 1 + amplitude * 2.0,
-            duration: 300,
-            easing: "easeOutQuint",
-        });
+        // anime({
+        //     targets: currentProjectPoint.material.uniforms.u_amplitude,
+        //     value: 1 + amplitude * 2.0,
+        //     duration: 600,
+        //     easing: "easeOutQuint",
+        // });
 
-        for (let i = 0; i < this.particlesGroup.children.length; i++) {
+        currentProjectPoint.material.uniforms.u_amplitude.value = 1.0 + amplitude * 0.5;
 
-            if (i != this.state.currentProject) {
-                this.particlesGroup.children[i].children[0].rotation.y = this.mouse.x * 0.2;
-                this.particlesGroup.children[i].children[0].rotation.x = -this.mouse.y * 0.2;
-            }
+        // for (let i = 0; i < this.particlesGroup.children.length; i++) {
+
+        //     if (i != this.state.currentProject) {
+        //         this.particlesGroup.children[i].children[0].rotation.y = this.mouse.x * 0.2;
+        //         this.particlesGroup.children[i].children[0].rotation.x = -this.mouse.y * 0.2;
+        //     }
             
-        }
+        // }
     }
 
     async resetParallax() {
@@ -357,7 +383,10 @@ class Showcase{
     }
 
     animate = () => {
-        let currentProjectPoint = this.particlesGroup.children[this.state.currentProject].children[0];
+
+        this.tt.update();
+
+        // let currentProjectPoint = this.particlesGroup.children[this.state.currentProject].children[0];
 
         // currentProjectPoint.rotation.y = this.mouse.x - (this.mouse.x * 0.2);
         // currentProjectPoint.rotation.x = -this.mouse.y * 0.2; 

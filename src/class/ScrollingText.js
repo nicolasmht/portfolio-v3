@@ -24,7 +24,7 @@ class ScrollingText {
         this.deltaTime = 0;
 
         this.ctx.font = "8rem Playfair Display";
-        this.ctx.strokeStyle = "rgb(60, 60, 60)";
+        this.ctx.strokeStyle = "rgb(255, 255, 255)";
         this.ctx.lineWidth = 1;
         this.ctx.textAlign = 'left';
         this.ctx.textBaseline = 'center';
@@ -34,7 +34,7 @@ class ScrollingText {
         this.currentCharInRight = 0;
         this.numberAutomaticlly = null;
 
-        this.globalAlpha = {value: 1};
+        this.globalAlpha = { value: 0.1 };
      
         this.letterVisibleSettings = this.createSentenceVisible();
 
@@ -241,7 +241,7 @@ class ScrollingText {
 
         Anime({
             targets: this.globalAlpha,
-            value: [this.globalAlpha.value, this.globalAlpha.value*2, this.globalAlpha.value],
+            value: [this.globalAlpha.value, this.globalAlpha.value * 2, this.globalAlpha.value],
             duration: 800,
             easing: 'easeOutCirc',
         });

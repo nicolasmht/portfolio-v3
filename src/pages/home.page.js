@@ -11,7 +11,7 @@ function Home() {
     return (
         <div id="home">
             <Showcase />
-            {/* <ScrollingText /> */}
+            <ScrollingText />
         </div>
     )
   

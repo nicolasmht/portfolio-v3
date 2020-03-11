@@ -23,7 +23,7 @@ class ImageToParticles {
 
 		let geometry = new THREE.BufferGeometry();
 
-		let nbParticles = 1000;
+		let nbParticles = 400;
 		let vertices = new Float32Array(nbParticles * nbParticles * 3, 3);
 
 		let spaceBetweenParticle = nbParticles / (nbParticles * nbParticles);
@@ -50,7 +50,7 @@ class ImageToParticles {
 			},
 			u_particleSize: {
 				type: "f",
-				value: 1.6,
+				value: 1.0,
 			},
 			u_texture: {
 				type: "t",
@@ -79,7 +79,11 @@ class ImageToParticles {
 			u_amplitude: {
 				type: "f",
 				value: 1.45,
-			}
+            },
+            u_touch: {
+                type: "t",
+                value: 0.0
+            }
 		};
 
 		let material = new THREE.ShaderMaterial({
@@ -100,9 +104,15 @@ class ImageToParticles {
 			uniform float u_scaleImage;
 			uniform float u_ratioWidth;
 			uniform float u_ratioHeight;
-			uniform float u_amplitude;
+            uniform float u_amplitude;
+            
+            uniform sampler2D u_touch;
 			
-			varying vec3 v_position;
+            varying vec3 v_position;
+            
+            float random (vec2 st) {
+                return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123);
+            }
 			
 			float calculateWeights(vec3 color) {
 				float zRange = 25.0;
@@ -123,9 +133,11 @@ class ImageToParticles {
 				float positionY = (position.y * ratioY) - ratioY / 2.0;
 				float positionZ = 0.0;
 		
-				vec4 textureColor = texture2D(u_texture, vec2(position.x, position.y));
+                vec4 textureColor = texture2D(u_texture, vec2(position.x, position.y));
+                
+                float texTouch = texture2D(u_touch, vec2(position.x, position.y)).r;
 		
-				positionZ = calculateWeights(vec3(textureColor.r, textureColor.g, textureColor.b)) * u_amplitude;
+				positionZ = calculateWeights(vec3(textureColor.r, textureColor.g, textureColor.b)) * u_amplitude + texTouch * 200.0 * random(vec2(position.x, position.y));
 		
 				vec4 modelViewPosition = modelViewMatrix * vec4(vec3(positionX, positionY, positionZ), 1.0);
 				gl_Position = projectionMatrix * modelViewPosition;
